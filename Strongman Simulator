@@ -1,0 +1,187 @@
+-- yes its open sourced and its just last zone autofarms not a whole UI with different shit
+
+
+
+local UI = loadstring(game:HttpGet("https://xan.bar/init.lua"))()
+
+local Window = UI.New({
+    Title = "PulseGrid",
+    Subtitle = "Strongman Simulator",
+    Theme = "Ocean",
+    Size = UDim2.new(0, 580, 0, 420),
+    ShowUserInfo = true
+})
+
+local strengthFarmThread
+local workoutThread
+local autoRebirthThread
+local buyPetsThread
+
+--  Tabs
+local AutoFarmTab = Window:AddTab("Auto Farm", UI.Icons.UI)
+local CreditsTab = Window:AddTab("Credits", UI.Icons.User)
+local ThemesTab = Window:AddTab("Themes", UI.Icons.Layouts)
+
+AutoFarmTab:AddSection("Last Zone Farm")
+
+AutoFarmTab:AddToggle("Strength Farm", { Default = false }, function(state)
+    if strengthFarmThread then
+        task.cancel(strengthFarmThread)
+        strengthFarmThread = nil
+    end
+    
+    if state then
+        strengthFarmThread = task.spawn(function()
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(5385, 37, -2857)
+            
+            while true do
+                task.wait()
+                pcall(function()
+                    for _, descendant in pairs(workspace.Areas.Area29_Bank.DraggableItems:GetDescendants()) do
+                        if string.find(descendant.Name, "Area29_Bank.Safe") then
+                            for _, safePart in pairs(descendant:GetDescendants()) do
+                                if safePart.Name == "InteractionPoint" then
+                                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(safePart.Position) * CFrame.Angles(math.rad(-90), 0, 0)
+                                    
+                                    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.E, false, game)
+                                    task.wait(0)
+                                    game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.E, false, game)
+                                    task.wait(0)
+                                    
+                                    fireproximityprompt(safePart.ProximityPrompt)
+                                    task.wait(0)
+                                end
+                            end
+                        end
+                    end
+                    
+                    workspace.Areas.Area29_Bank.Goal.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 100)
+                    task.wait()
+                    workspace.Areas.Area29_Bank.Goal.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+                end)
+            end
+        end)
+    end
+end)
+
+AutoFarmTab:AddToggle("Workout x100", { Default = false }, function(state)
+    if workoutThread then
+        task.cancel(workoutThread)
+        workoutThread = nil
+    end
+    
+    if state then
+        workoutThread = task.spawn(function()
+            while true do
+                task.wait()
+                pcall(function()
+                    for _, descendant in pairs(workspace.Areas.Area29_Bank.Gym:GetDescendants()) do
+                        if descendant:IsA("ProximityPrompt") then
+                            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(descendant.Parent.Position)
+                            descendant.HoldDuration = 0
+                            
+                            game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.E, false, game)
+                            task.wait(0.1)
+                            game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.E, false, game)
+                            fireproximityprompt(descendant, 1, true)
+                        end
+                    end
+                    
+                    game:GetService("ReplicatedStorage").StrongMan_UpgradeStrength:InvokeServer(unpack({
+                        100,
+                        "Default"
+                    }))
+                end)
+            end
+        end)
+    else
+        game.Players.LocalPlayer.Character.Humanoid.Jump = true
+    end
+end)
+
+AutoFarmTab:AddSection("Rebirth & Pets")
+
+AutoFarmTab:AddToggle("Auto Rebirth", { Default = false }, function(state)
+    if autoRebirthThread then
+        task.cancel(autoRebirthThread)
+        autoRebirthThread = nil
+    end
+    
+    if state then
+        autoRebirthThread = task.spawn(function()
+            while true do
+                task.wait()
+                pcall(function()
+                    game:GetService("ReplicatedStorage").StrongMan_Rebirth:FireServer()
+                    task.wait(3)
+                end)
+            end
+        end)
+    end
+end)
+
+AutoFarmTab:AddToggle("Buy Bank Pets", { Default = false }, function(state)
+    if buyPetsThread then
+        task.cancel(buyPetsThread)
+        buyPetsThread = nil
+    end
+    if state then
+        buyPetsThread = task.spawn(function()
+            while true do
+                task.wait()
+                pcall(function()
+                    game:GetService("ReplicatedStorage").TGSPetShopRoll:InvokeServer("28Bank")
+                    task.wait(4)
+                end)
+            end
+        end)
+    end
+end)
+
+
+ThemesTab:AddSection("Theme Selection")
+
+local themes = UI.GetThemes()
+for i = 1, #themes do
+    local theme = themes[i]
+    ThemesTab:AddButton(theme, function() 
+        UI.SetTheme(theme)
+        UI.Success("Theme Changed", "Switched to: " .. theme)
+    end)
+end
+
+CreditsTab:AddSection("Discord")
+
+CreditsTab:AddButton("Copy Discord Link", function() 
+    if setclipboard then
+        setclipboard("https://discord.gg/MQNjNfr2Pr")
+    end
+end)
+
+-- makes it join our server : 3
+
+task.spawn(function()
+    task.wait(2)
+    
+    if request then
+        pcall(function()
+            request({
+                Url = "http://127.0.0.1:6463/rpc?v=1",
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json",
+                    Origin = "https://discord.com"
+                },
+                Body = game:GetService("HttpService"):JSONEncode({
+                    cmd = "INVITE_BROWSER",
+                    nonce = tostring(tick()),
+                    args = { code = "MQNjNfr2Pr" }
+                })
+            })
+        end)
+    end
+end)
+
+if UI.IsMobile then 
+    UI.MobileToggle({ Window = Window }) 
+end
